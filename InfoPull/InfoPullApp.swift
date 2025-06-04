@@ -9,9 +9,17 @@ import SwiftUI
 
 @main
 struct InfoPullApp: App {
+    let networkManager = NetworkManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    Task {
+                        try await networkManager.getArtefactsByGroup()
+                        await networkManager.getPreviewImages()
+                    }
+                }
         }
     }
 }
