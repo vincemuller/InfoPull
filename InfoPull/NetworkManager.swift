@@ -124,6 +124,7 @@ class NetworkManager {
         }.resume()
     }
     
+    
     func detectTitleBlock(from cgImage: CGImage) throws {
         
         guard let resizedImage = resizeCGImage(cgImage, to: CGSize(width: 932, height: 932)) else {

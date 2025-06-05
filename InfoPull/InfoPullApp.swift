@@ -13,7 +13,7 @@ struct InfoPullApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ConfigurationScreen()
                 .onAppear {
                     Task {
                         try await networkManager.getArtefactsByGroup()
