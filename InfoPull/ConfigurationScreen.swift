@@ -54,53 +54,39 @@ struct ConfigurationScreen: View {
                         .frame(width: 160, alignment: .leading)
                         .font(.system(size: 20))
                         .foregroundStyle(Color.gray)
-                    ZStack(alignment: .leading) {
-                        if model.isEmpty {
-                            Text("")
-                                .font(.system(size: 20))
-                                .foregroundColor(Color.gray.opacity(0.5))
+                    Picker("", selection: $networkManager.selectedModel) {
+                        ForEach(SelectedModel.allCases, id: \.self) { model in
+                            Text(model.label)
+                                .foregroundStyle(Color.black)
+                                .onTapGesture {
+                                    self.networkManager.selectedModel = model
+                                }
                         }
-                        TextField("", text: $model)
-                            .font(.system(size: 16))
-                            .textFieldStyle(PlainTextFieldStyle())
-                            .padding(.leading)
                     }
-                    .padding(.vertical, 4)
-                    .frame(width: 300, height: 40)
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.gray)
-                    .background(Color.white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 5)
-                            .stroke(Color.gray, lineWidth: 1)
-                    )
+                    .frame(width: 310, height: 40, alignment: .leading)
                 }
                 .padding(.vertical, 20)
-                HStack {
+                HStack (alignment: .top) {
                     Text("Attribute Group:")
                         .frame(width: 160, alignment: .leading)
                         .font(.system(size: 20))
                         .foregroundStyle(Color.gray)
-                    ZStack(alignment: .leading) {
-                        if attributeBlock.isEmpty {
-                            Text("")
-                                .font(.system(size: 20))
-                                .foregroundColor(Color.gray.opacity(0.5))
+                    VStack (alignment: .leading){
+                        ForEach(networkManager.selectedModel.attributes, id: \.self) { attribute in
+                            Text(attribute)
+                                .font(.system(size: 14))
+                                .foregroundStyle(Color.black)
                         }
-                        TextField("", text: $attributeBlock)
-                            .font(.system(size: 16))
-                            .textFieldStyle(PlainTextFieldStyle())
-                            .padding(.leading)
                     }
-                    .padding(.vertical, 4)
-                    .frame(width: 300, height: 40)
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.gray)
-                    .background(Color.white)
-                    .overlay(
+                    .padding(.leading, 10)
+                    .padding(.bottom)
+                    .frame(width: 300, alignment: .leading)
+                    .background {
                         RoundedRectangle(cornerRadius: 5)
-                            .stroke(Color.gray, lineWidth: 1)
-                    )
+                            .fill(Color.white)
+                            .stroke(Color.gray.opacity(0.5))
+                    }
+                    .offset(y: 2)
                 }
                 VStack {
                     HStack {
@@ -158,11 +144,26 @@ struct ConfigurationScreen: View {
             VStack (alignment: .center, spacing: 25) {
                 
                 Table(networkManager.extractedData) {
-                    TableColumn("Filepath", value: \.filename)
-                    TableColumn("Drawing Number", value: \.drawingNumber)
-                    TableColumn("Drawing Title", value: \.drawingTitle)
-                    TableColumn("Project", value: \.project)
-                    TableColumn("Revision", value: \.revision)
+                    TableColumn("Filepath") { row in
+                        Button(row.filename) {
+                            print(row.filename)
+                        }
+                    }
+                    TableColumn("Drawing Number") { row in
+                        Button(row.drawingNumber) {
+                            print(row.drawingNumber)
+                        }
+                    }
+                    TableColumn("Drawing Title") { row in
+                        Button(row.drawingTitle) {
+                            print(row.drawingTitle)
+                        }
+                    }
+                    TableColumn("Project") { row in
+                        Button(row.project) {
+                            print(row.project)
+                        }
+                    }
                 }
                 .frame(width: 1500, height: 650)
                 .background(Color.black)

@@ -8,6 +8,7 @@ import CoreML
 class NetworkManager: ObservableObject {
     @Published var extractedData: [FileData] = []
     @Published var croppedImage: CGImage?
+    @Published var selectedModel: SelectedModel = .greenFieldsEngineering
 
     //CoreML and Vision Functions
     
@@ -27,11 +28,11 @@ class NetworkManager: ObservableObject {
     
     func detectTitleBlock(from cgImage: CGImage, filename: String) throws {
         
-        guard let resizedImage = resizeCGImage(cgImage, to: CGSize(width: 600, height: 600)) else {
+        guard let resizedImage = resizeCGImage(cgImage, to: CGSize(width: 932, height: 932)) else {
             return
         }
-        
-        let model = try VNCoreMLModel(for: InfoPull_Model(configuration: .init()).model)
+    
+        let model = try selectedModel.model
         let dispatchGroup = DispatchGroup()
         
         var record = FileData(filename: filename, drawingNumber: "", drawingTitle: "", project: "", revision: "")
@@ -65,7 +66,6 @@ class NetworkManager: ObservableObject {
                         record.project = u.joined(separator: " ")
                     } else if label == "revision" && u.contains("Revision") {
                         record.revision = u.joined(separator: " ")
-                        self.croppedImage = cropImage
                     } else {
                         
                     }
