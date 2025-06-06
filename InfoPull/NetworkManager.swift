@@ -25,8 +25,51 @@ class NetworkManager: ObservableObject {
         }.resume()
     }
     
+    func detectTitleBlockSpecificExtract(from cgImage: CGImage, identifier: String) throws {
+        guard let resizedImage = resizeCGImage(cgImage, to: CGSize(width: 932, height: 932)) else {
+            return
+        }
+        
+        let model = try selectedModel.model
+        let dispatchGroup = DispatchGroup()
+        
+        let request = VNCoreMLRequest(model: model) { request, error in
+            guard let results = request.results as? [VNRecognizedObjectObservation] else {
+                print("No results or wrong result type")
+                print(error?.localizedDescription ?? "Unknown error")
+                return
+            }
+
+            for result in results {
+                
+                let label = result.labels.first?.identifier
+                let cropImage = self.cropImage(cgImage, to: result.boundingBox)
+                guard let cropped = cropImage else { continue }
+
+                dispatchGroup.enter()
+                self.performOCR(on: cropped) { texts in
+                    let u = texts.filter { text in
+                        !text.lowercased().contains("rawin") &&
+                        !text.lowercased().contains("blatt") &&
+                        !text.lowercased().contains("roject:")
+                    }
+
+                    if label == identifier {
+                        DispatchQueue.main.async {
+                            self.croppedImage = cropped
+                        }
+                    }
+
+                    dispatchGroup.leave()
+                }
+            }
+        }
+
+        let handler = VNImageRequestHandler(cgImage: resizedImage, options: [:])
+        try handler.perform([request])
+    }
     
-    func detectTitleBlock(from cgImage: CGImage, filename: String) throws {
+    func detectTitleBlockFullExtract(from cgImage: CGImage, filename: String) throws {
         
         guard let resizedImage = resizeCGImage(cgImage, to: CGSize(width: 932, height: 932)) else {
             return

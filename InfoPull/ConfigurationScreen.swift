@@ -20,6 +20,7 @@ struct ConfigurationScreen: View {
     @State var i: CGImage?
     
     @State var tablePresenting: Bool = false
+    @State var presentCropImage: Bool = false
     
     var body: some View {
         VStack {
@@ -109,7 +110,7 @@ struct ConfigurationScreen: View {
                             for file in filesArray {
                                 downloadLocalImage(from: URL(fileURLWithPath: file)) { image in
                                     do {
-                                        try self.networkManager.detectTitleBlock(from: image!, filename: file.lowercased())
+                                        try self.networkManager.detectTitleBlockFullExtract(from: image!, filename: file.lowercased())
                                     } catch let error {
                                         print(error)
                                     }
@@ -143,33 +144,72 @@ struct ConfigurationScreen: View {
             !tablePresenting ? nil :
             VStack (alignment: .center, spacing: 25) {
                 
-                Table(networkManager.extractedData) {
-                    TableColumn("Filepath") { row in
-                        Button(row.filename) {
-                            print(row.filename)
+                Table($networkManager.extractedData) {
+                    TableColumn("Filepath") { $row in
+                        HStack {
+                            TextEditor(text: $row.filename)
+                                .scrollContentBackground(.hidden)
                         }
                     }
-                    TableColumn("Drawing Number") { row in
-                        Button(row.drawingNumber) {
-                            print(row.drawingNumber)
+                    TableColumn("Drawing Number") { $row in
+                        HStack {
+                            TextEditor(text: $row.drawingNumber)
+                                .scrollContentBackground(.hidden)
+                            Image(systemName: "text.below.photo")
+                                .onTapGesture {
+                                    downloadLocalImage(from: URL(fileURLWithPath: row.filename)) { image in
+                                        presentCropImage = true
+                                        do {
+                                            try self.networkManager.detectTitleBlockSpecificExtract(from: image!, identifier: "drawingNumber")
+                                        } catch let error {
+                                            print(error)
+                                        }
+                                    }
+                                }
                         }
                     }
-                    TableColumn("Drawing Title") { row in
-                        Button(row.drawingTitle) {
-                            print(row.drawingTitle)
+                    TableColumn("Drawing Title") { $row in
+                        HStack {
+                            TextEditor(text: $row.drawingTitle)
+                                .scrollContentBackground(.hidden)
+                            Image(systemName: "text.below.photo")
+                                .onTapGesture {
+                                    downloadLocalImage(from: URL(fileURLWithPath: row.filename)) { image in
+                                        presentCropImage = true
+                                        do {
+                                            try self.networkManager.detectTitleBlockSpecificExtract(from: image!, identifier: "drawingTitle")
+                                        } catch let error {
+                                            print(error)
+                                        }
+                                    }
+                                }
                         }
                     }
-                    TableColumn("Project") { row in
-                        Button(row.project) {
-                            print(row.project)
+                    TableColumn("Project") { $row in
+                        HStack {
+                            TextEditor(text: $row.project)
+                                .scrollContentBackground(.hidden)
+                            Image(systemName: "text.below.photo")
+                                .onTapGesture {
+                                    downloadLocalImage(from: URL(fileURLWithPath: row.filename)) { image in
+                                        presentCropImage = true
+                                        do {
+                                            try self.networkManager.detectTitleBlockSpecificExtract(from: image!, identifier: "project")
+                                        } catch let error {
+                                            print(error)
+                                        }
+                                    }
+                                }
                         }
                     }
                 }
-                .frame(width: 1500, height: 650)
+                .frame(width: 1500, height: 750)
                 .background(Color.black)
                 HStack {
                     Button {
                         tablePresenting.toggle()
+                        networkManager.croppedImage = nil
+                        presentCropImage = false
                     } label: {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
@@ -185,6 +225,8 @@ struct ConfigurationScreen: View {
                         networkManager.extractedData = []
                         filesArray = []
                         selectedFiles = ""
+                        networkManager.croppedImage = nil
+                        presentCropImage = false
                     } label: {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
@@ -197,6 +239,10 @@ struct ConfigurationScreen: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+        })
+        .overlay(alignment: .center, content: {
+            if presentCropImage {
                 if let cgImage = networkManager.croppedImage {
                     Image(decorative: cgImage, scale: 1.0, orientation: .up)
                         .resizable()
@@ -247,12 +293,6 @@ struct ConfigurationScreen: View {
             }
         }.resume()
     }
-    
-    
-//    Task {
-//        try await networkManager.getArtefactsByGroup()
-//        await networkManager.getPreviewImages()
-//    }
 }
 
 #Preview {
