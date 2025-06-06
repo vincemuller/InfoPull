@@ -10,12 +10,16 @@ import UniformTypeIdentifiers
 
 struct ConfigurationScreen: View {
     
+    @StateObject var networkManager = NetworkManager()
+    
     @State var model: String = ""
     @State var attributeBlock: String = ""
     @State var showFileImporter: Bool = false
     @State var selectedFiles: String = ""
     @State var filesArray: [String] = []
     @State var i: CGImage?
+    
+    @State var tablePresenting: Bool = false
     
     var body: some View {
         VStack {
@@ -98,41 +102,115 @@ struct ConfigurationScreen: View {
                             .stroke(Color.gray, lineWidth: 1)
                     )
                 }
-                VStack (spacing: 40) {
-                    Button {
-                        showFileImporter = true
-                        filesArray = []
-                        selectedFiles = ""
-                    } label: {
-                        Text("Upload Files")
-                            .font(.system(size: 30, weight: .semibold))
-                            .foregroundStyle(Color.white)
-                            .background {
-                                RoundedRectangle(cornerRadius: 20)
+                VStack {
+                    HStack {
+                        Button {
+                            showFileImporter = true
+                            filesArray = []
+                            selectedFiles = ""
+                        } label: {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
                                     .fill(Color.black)
-                                    .frame(width: 300, height: 80)
+                                    .frame(width: 250, height: 60)
+                                Text("Select Files")
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundStyle(Color.white)
                             }
+                        }
+                        .buttonStyle(.plain)
+                        Button {
+                            for file in filesArray {
+                                downloadLocalImage(from: URL(fileURLWithPath: file)) { image in
+                                    do {
+                                        try self.networkManager.detectTitleBlock(from: image!, filename: file.lowercased())
+                                    } catch let error {
+                                        print(error)
+                                    }
+                                }
+                            }
+                            tablePresenting.toggle()
+                        } label: {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.green)
+                                    .frame(width: 250, height: 60)
+                                Text("Extract Data")
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundStyle(Color.white)
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
-                    if let cgImage = i {
-                        Image(decorative: cgImage, scale: 1.0, orientation: .up)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 300)
-                            .padding()
-                    } else {
-                        Text("No image selected")
-                            .foregroundStyle(.gray)
-                    }
+                    .padding(.top, 70)
+                    filesArray.isEmpty ? nil : Text("\(filesArray.count) files selected for extraction")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Color.black)
+                        .padding()
                 }
-                .padding(.top, 70)
             }
             .padding(.top, 50)
             Spacer()
         }
         .background(.llightgray)
+        .overlay(alignment: .top, content: {
+            !tablePresenting ? nil :
+            VStack (alignment: .center, spacing: 25) {
+                
+                Table(networkManager.extractedData) {
+                    TableColumn("Filepath", value: \.filename)
+                    TableColumn("Drawing Number", value: \.drawingNumber)
+                    TableColumn("Drawing Title", value: \.drawingTitle)
+                    TableColumn("Project", value: \.project)
+                    TableColumn("Revision", value: \.revision)
+                }
+                .frame(width: 1500, height: 650)
+                .background(Color.black)
+                HStack {
+                    Button {
+                        tablePresenting.toggle()
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.black)
+                                .frame(width: 250, height: 40)
+                            Text("Hide Table")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    Button {
+                        networkManager.extractedData = []
+                        filesArray = []
+                        selectedFiles = ""
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.red)
+                                .frame(width: 250, height: 40)
+                            Text("Clear Table")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                if let cgImage = networkManager.croppedImage {
+                    Image(decorative: cgImage, scale: 1.0, orientation: .up)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 150)
+                        .padding()
+                } else {
+                    Text("No image selected")
+                        .foregroundStyle(.gray)
+                }
+            }
+        })
         .fileImporter(
             isPresented: $showFileImporter,
-            allowedContentTypes: [UTType.init(filenameExtension: "png")!],
+            allowedContentTypes: [UTType.init(filenameExtension: "jpg")!, UTType.init(filenameExtension: "png")!],
             allowsMultipleSelection: true
         ) { result in
             switch result {
@@ -146,9 +224,6 @@ struct ConfigurationScreen: View {
                     selectedFiles = file.path().replacingOccurrences(of: "%20", with: " ")
                     let fileArray = selectedFiles.components(separatedBy: "\n")
                     filesArray.append(contentsOf: fileArray)
-                    downloadLocalImage(from: URL(fileURLWithPath: filesArray.first ?? "")) { image in
-                        self.i = image
-                    }
                     file.stopAccessingSecurityScopedResource()
                 }
             case .failure(let error):
@@ -171,6 +246,12 @@ struct ConfigurationScreen: View {
             }
         }.resume()
     }
+    
+    
+//    Task {
+//        try await networkManager.getArtefactsByGroup()
+//        await networkManager.getPreviewImages()
+//    }
 }
 
 #Preview {

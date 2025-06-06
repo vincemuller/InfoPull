@@ -5,112 +5,12 @@ import Vision
 import CoreML
 
 
-class NetworkManager {
-    
-    private var apiToken: String = "d7ec475b45d3857d171a283e336ed6cc77d14c835943747a9ceec549e0f0b6ef"
-    var artefactIDs: [Int] = []
-    var artefactImages: [ArtefactPreviewResponse] = []
-    
-    init() {}
-    
-    private let base: String = "https://uat-api.redeyedms.com/"
-    private let decoder = JSONDecoder()
-    
-    private func previewImageRequest(artefactID: Int) async throws {
-        
-        let endPoint: String = "api/v1/artefacts/\(artefactID)/preview"
-        
-        var request = URLRequest(url: URL(string: base + endPoint)!,timeoutInterval: Double.infinity)
+class NetworkManager: ObservableObject {
+    @Published var extractedData: [FileData] = []
+    @Published var croppedImage: CGImage?
 
-        request.addValue("Bearer \(apiToken)", forHTTPHeaderField: "Authorization")
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-        
-        request.httpMethod = "GET"
-        
-        let (data, _) = try await URLSession.shared.data(for: request)
-        
-        do {
-            let decodedData = try decoder.decode(ArtefactPreviewResponse.self, from: data)
-            artefactImages.append(decodedData)
-            
-            downloadImage(from: URL(string: decodedData.url)!) { image in
-                do {
-                    try self.detectTitleBlock(from: image!)
-                } catch let error {
-                    print(error)
-                }
-            }
-            
-        } catch {
-            print("Decoding error")
-        }
-    }
-    
-    func getPreviewImages() async {
-        for artefact in artefactIDs {
-            Task {
-                do {
-                    try await previewImageRequest(artefactID: artefact)
-                } catch {
-                    print("Error")
-                }
-            }
-        }
-        
-    }
-    
-    func getArtefactsByGroup(groupdID: Int = 86157) async throws {
-        
-        batchReset()
-        
-        let endPoint: String = "api/v1/search"
-
-        var request = URLRequest(url: URL(string: base + endPoint)!)
-
-        request.httpMethod = "POST"
-
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("Bearer \(apiToken)", forHTTPHeaderField: "Authorization")
-
-        let parameters = ["advanced": ["and": [
-            [
-              "exact": true,
-              "property": "group",
-              "value": groupdID,
-              "relation": "intersects"
-            ]
-          ]]] as [String : Any]
-
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: parameters, options: [])
-            request.httpBody = jsonData
-        } catch {
-            print("Error serializing JSON: \(error)")
-        }
-
-        let (data, _) = try await URLSession.shared.data(for: request)
-
-        do {
-            let decodedData = try decoder.decode(GetArtefactsResponse.self, from: data)
-
-            for i in decodedData.results {
-                artefactIDs.append(i.id)
-
-                print(i.id.description)
-            }
-        } catch {
-            print("decoding error")
-        }
-    }
-    
-    private func batchReset() {
-        artefactImages.removeAll()
-        artefactIDs.removeAll()
-    }
-    
-    
     //CoreML and Vision Functions
+    
     
     func downloadImage(from url: URL, completion: @escaping (CGImage?) -> Void) {
         URLSession.shared.dataTask(with: url) { data, _, _ in
@@ -125,34 +25,60 @@ class NetworkManager {
     }
     
     
-    func detectTitleBlock(from cgImage: CGImage) throws {
+    func detectTitleBlock(from cgImage: CGImage, filename: String) throws {
         
-        guard let resizedImage = resizeCGImage(cgImage, to: CGSize(width: 932, height: 932)) else {
+        guard let resizedImage = resizeCGImage(cgImage, to: CGSize(width: 600, height: 600)) else {
             return
         }
         
-        let model = try VNCoreMLModel(for: HawkEye_Model(configuration: .init()).model)
+        let model = try VNCoreMLModel(for: InfoPull_Model(configuration: .init()).model)
+        let dispatchGroup = DispatchGroup()
+        
+        var record = FileData(filename: filename, drawingNumber: "", drawingTitle: "", project: "", revision: "")
+        
         let request = VNCoreMLRequest(model: model) { request, error in
             guard let results = request.results as? [VNRecognizedObjectObservation] else {
                 print("No results or wrong result type")
-                print(error?.localizedDescription)
+                print(error?.localizedDescription ?? "Unknown error")
                 return
             }
 
             for result in results {
-                print("Label: \(result.labels.first?.identifier ?? "Unknown")")
-                print("Confidence: \(result.confidence)")
-                print("Bounding Box: \(result.boundingBox)")
+                
+                let label = result.labels.first?.identifier
                 let cropImage = self.cropImage(cgImage, to: result.boundingBox)
-                self.performOCR(on: cropImage!) { texts in
-                    var t = texts
-                    var u = texts.filter({!$0.contains("Drawing")})
-                    print("OCR Texts found: \(u)")
-                    // Here you can parse and assign the OCR text data to your metadata model
+                guard let cropped = cropImage else { continue }
+
+                dispatchGroup.enter()
+                self.performOCR(on: cropped) { texts in
+                    let u = texts.filter { text in
+                        !text.lowercased().contains("rawin") &&
+                        !text.lowercased().contains("blatt") &&
+                        !text.lowercased().contains("roject:")
+                    }
+
+                    if label == "drawingNumber" {
+                        record.drawingNumber = u.joined(separator: " ")
+                    } else if label == "drawingTitle" {
+                        record.drawingTitle = u.joined(separator: " ")
+                    } else if label == "project" {
+                        record.project = u.joined(separator: " ")
+                    } else if label == "revision" && u.contains("Revision") {
+                        record.revision = u.joined(separator: " ")
+                        self.croppedImage = cropImage
+                    } else {
+                        
+                    }
+
+                    dispatchGroup.leave()
                 }
             }
+
+            dispatchGroup.notify(queue: .main) {
+                self.extractedData.append(record)
+                print("Finished processing record: \(record)")
+            }
         }
-        
 
         let handler = VNImageRequestHandler(cgImage: resizedImage, options: [:])
         try handler.perform([request])
