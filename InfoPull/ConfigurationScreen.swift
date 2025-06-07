@@ -142,7 +142,7 @@ struct ConfigurationScreen: View {
         .background(.llightgray)
         .overlay(alignment: .top, content: {
             !tablePresenting ? nil :
-            VStack (alignment: .center, spacing: 25) {
+            VStack (alignment: .center) {
                 
                 Table($networkManager.extractedData) {
                     TableColumn("Filepath") { $row in
@@ -203,13 +203,35 @@ struct ConfigurationScreen: View {
                         }
                     }
                 }
-                .frame(width: 1500, height: 750)
+                .frame(width: 1500, height: 500)
                 .background(Color.black)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.llightgray)
+                        .stroke(Color.gray)
+                        .frame(width: 700, height: 250)
+                        .padding(.top)
+                        .padding(.bottom, 25)
+                    if presentCropImage {
+                        if let cgImage = networkManager.croppedImage {
+                            Image(decorative: cgImage, scale: 1.0, orientation: .up)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 690, height: 240)
+                                .padding()
+                        } else {
+                            Text("No image selected")
+                                .foregroundStyle(.gray)
+                        }
+                    }
+                }
+
                 HStack {
                     Button {
                         tablePresenting.toggle()
                         networkManager.croppedImage = nil
                         presentCropImage = false
+                        dump(networkManager.extractedData)
                     } label: {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
@@ -238,20 +260,6 @@ struct ConfigurationScreen: View {
                         }
                     }
                     .buttonStyle(.plain)
-                }
-            }
-        })
-        .overlay(alignment: .center, content: {
-            if presentCropImage {
-                if let cgImage = networkManager.croppedImage {
-                    Image(decorative: cgImage, scale: 1.0, orientation: .up)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 150)
-                        .padding()
-                } else {
-                    Text("No image selected")
-                        .foregroundStyle(.gray)
                 }
             }
         })
