@@ -7,6 +7,8 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import AppKit
+
 
 struct ConfigurationScreen: View {
     
@@ -22,12 +24,17 @@ struct ConfigurationScreen: View {
     @State var tablePresenting: Bool = false
     @State var presentCropImage: Bool = false
     
+    @State var width: CGFloat = 0
+    @State var height: CGFloat = 0
+
+    
     var body: some View {
+        
         VStack {
             ZStack {
                 Rectangle()
                     .fill(Color.black)
-                    .frame(height: 160)
+                    .frame(height: 0.167 * height)
                 HStack {
                     Image(systemName: "square.and.arrow.down")
                         .foregroundStyle(Color.white)
@@ -35,7 +42,7 @@ struct ConfigurationScreen: View {
                     Text("InfoPull")
                         .font(.system(size: 60, weight: .semibold))
                         .foregroundStyle(Color.white)
-                        .frame(height: 80, alignment: .bottomLeading)
+                        .frame(height: 0.0836 * height, alignment: .bottomLeading)
                         .offset(y: 12)
                     Spacer()
                     Image(systemName: "line.3.horizontal")
@@ -52,7 +59,7 @@ struct ConfigurationScreen: View {
                     .padding(.bottom, 40)
                 HStack {
                     Text("Model:")
-                        .frame(width: 160, alignment: .leading)
+                        .frame(width: 0.1088 * width, alignment: .leading)
                         .font(.system(size: 20))
                         .foregroundStyle(Color.gray)
                     Picker("", selection: $networkManager.selectedModel) {
@@ -64,12 +71,12 @@ struct ConfigurationScreen: View {
                                 }
                         }
                     }
-                    .frame(width: 310, height: 40, alignment: .leading)
+                    .frame(width: 0.2108 * width, height: 0.04184 * height, alignment: .leading)
                 }
                 .padding(.vertical, 20)
                 HStack (alignment: .top) {
                     Text("Attribute Group:")
-                        .frame(width: 160, alignment: .leading)
+                        .frame(width: 0.1088 * width, alignment: .leading)
                         .font(.system(size: 20))
                         .foregroundStyle(Color.gray)
                     VStack (alignment: .leading){
@@ -81,7 +88,7 @@ struct ConfigurationScreen: View {
                     }
                     .padding(.leading, 10)
                     .padding(.bottom)
-                    .frame(width: 300, alignment: .leading)
+                    .frame(width: 0.204 * width, alignment: .leading)
                     .background {
                         RoundedRectangle(cornerRadius: 5)
                             .fill(Color.white)
@@ -99,7 +106,7 @@ struct ConfigurationScreen: View {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 10)
                                     .fill(Color.black)
-                                    .frame(width: 250, height: 60)
+                                    .frame(width: 0.17 * width, height: 0.0627 * height)
                                 Text("Select Files")
                                     .font(.system(size: 20, weight: .semibold))
                                     .foregroundStyle(Color.white)
@@ -116,12 +123,14 @@ struct ConfigurationScreen: View {
                                     }
                                 }
                             }
-                            tablePresenting.toggle()
+                            withAnimation {
+                                tablePresenting.toggle()
+                            }
                         } label: {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 10)
                                     .fill(Color.green)
-                                    .frame(width: 250, height: 60)
+                                    .frame(width: 0.17 * width, height: 0.0627 * height)
                                 Text("Extract Data")
                                     .font(.system(size: 20, weight: .semibold))
                                     .foregroundStyle(Color.white)
@@ -203,21 +212,23 @@ struct ConfigurationScreen: View {
                         }
                     }
                 }
-                .frame(width: 1500, height: 500)
+                .frame(width: width, height: 0.523 * height)
                 .background(Color.black)
+                Text("OCR Quality Control")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(Color.black)
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(Color.llightgray)
                         .stroke(Color.gray)
-                        .frame(width: 700, height: 250)
-                        .padding(.top)
+                        .frame(width: 0.4761 * width, height: 0.2615 * height)
                         .padding(.bottom, 25)
                     if presentCropImage {
                         if let cgImage = networkManager.croppedImage {
                             Image(decorative: cgImage, scale: 1.0, orientation: .up)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 690, height: 240)
+                                .frame(width: 0.46938 * width, height: 0.251 * height)
                                 .padding()
                         } else {
                             Text("No image selected")
@@ -236,8 +247,21 @@ struct ConfigurationScreen: View {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.black)
-                                .frame(width: 250, height: 40)
+                                .frame(width: 0.1496 * width, height: 0.0418 * height)
                             Text("Hide Table")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    Button {
+                        networkManager.exportToCSV(fileName: "TestOCRExport")
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.green)
+                                .frame(width: 0.1496 * width, height: 0.0418 * height)
+                            Text("Export CSV")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(Color.white)
                         }
@@ -253,7 +277,7 @@ struct ConfigurationScreen: View {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.red)
-                                .frame(width: 250, height: 40)
+                                .frame(width: 0.1496 * width, height: 0.0418 * height)
                             Text("Clear Table")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(Color.white)
@@ -286,6 +310,19 @@ struct ConfigurationScreen: View {
                 print(error)
             }
         }
+        .onAppear {
+            if let screen = NSScreen.main {
+                let rect = screen.frame
+                height = rect.size.height
+                width = rect.size.width
+
+                print("Screen width: \(width)")
+                print("Screen height: \(height)")
+            }
+        }
+        .alert("Export Complete", isPresented: $networkManager.alertPresenting) {
+            Text("Your extracted data has been successfully exported")
+        }
     }
     
     func downloadLocalImage(from url: URL, completion: @escaping (CGImage?) -> Void) {
@@ -301,6 +338,7 @@ struct ConfigurationScreen: View {
             }
         }.resume()
     }
+    
 }
 
 #Preview {

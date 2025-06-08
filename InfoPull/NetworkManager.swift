@@ -9,6 +9,7 @@ class NetworkManager: ObservableObject {
     @Published var extractedData: [FileData] = []
     @Published var croppedImage: CGImage?
     @Published var selectedModel: SelectedModel = .greenFieldsEngineering
+    @Published var alertPresenting: Bool = false
 
     //CoreML and Vision Functions
     
@@ -198,6 +199,26 @@ class NetworkManager: ObservableObject {
             try? handle.close()
         } else {
             try? rows.write(to: fileURL, atomically: true, encoding: .utf8)
+        }
+    }
+    
+    func exportToCSV(fileName: String) {
+        let csvString = extractedData.map { row in
+            row.filename + "," + row.drawingNumber + "," + row.drawingTitle + "," + row.project
+        }.joined(separator: "\n")
+        
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let fileURL = documentsURL.appendingPathComponent(fileName + ".csv")
+        
+        do {
+            try csvString.write(to: fileURL, atomically: true, encoding: .utf8)
+            DispatchQueue.main.async {
+                self.alertPresenting.toggle()
+            }
+            print("CSV file written successfully to \(fileURL.path)")
+        } catch {
+            print("Error writing CSV file: \(error)")
         }
     }
 }
