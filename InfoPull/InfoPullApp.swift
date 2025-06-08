@@ -10,9 +10,12 @@ import SwiftUI
 @main
 struct InfoPullApp: App {
     
+    @StateObject var viewModel: ViewModel = ViewModel()
+    
     var body: some Scene {
         WindowGroup {
             ConfigurationScreen()
+                .environmentObject(viewModel)
         }
     }
 }

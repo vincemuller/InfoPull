@@ -5,14 +5,41 @@ import Vision
 import CoreML
 
 
-class NetworkManager: ObservableObject {
+class ViewModel: ObservableObject {
+    
+    @Published var showFileImporter: Bool = false
+    @Published var selectedFiles: String = ""
+    @Published var filesArray: [String] = []
     @Published var extractedData: [FileData] = []
     @Published var croppedImage: CGImage?
     @Published var selectedModel: SelectedModel = .greenFieldsEngineering
     @Published var alertPresenting: Bool = false
+    @Published var exportPromptPresenting: Bool = false
+    @Published var tablePresenting: Bool = false
+    
+    @Published var writtenFileName: String = ""
 
+    
+    func selectFilesReset() {
+        selectedFiles = ""
+        filesArray = []
+        showFileImporter = true
+    }
     //CoreML and Vision Functions
     
+    func downloadLocalImage(from url: URL, completion: @escaping (CGImage?) -> Void) {
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            guard let data = data,
+                  let nsImage = NSImage(data: data),
+                  let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                completion(nil)
+                return
+            }
+            DispatchQueue.main.async {
+                completion(cgImage)
+            }
+        }.resume()
+    }
     
     func downloadImage(from url: URL, completion: @escaping (CGImage?) -> Void) {
         URLSession.shared.dataTask(with: url) { data, _, _ in
@@ -189,27 +216,17 @@ class NetworkManager: ObservableObject {
         return image.cropping(to: rect)
     }
     
-    func appendToCSV(fileURL: URL, data: [[String]]) {
-        let rows = data.map { $0.joined(separator: ",") }.joined(separator: "\n")
-        if let handle = try? FileHandle(forWritingTo: fileURL) {
-            handle.seekToEndOfFile()
-            if let rowData = ("\n" + rows).data(using: .utf8) {
-                handle.write(rowData)
-            }
-            try? handle.close()
-        } else {
-            try? rows.write(to: fileURL, atomically: true, encoding: .utf8)
-        }
-    }
-    
-    func exportToCSV(fileName: String) {
-        let csvString = extractedData.map { row in
+    func exportToCSV() {
+        let headers = "Filepath,DrawingNumber,DrawingTitle,Project\n"
+        var csvString = extractedData.map { row in
             row.filename + "," + row.drawingNumber + "," + row.drawingTitle + "," + row.project
         }.joined(separator: "\n")
         
+        csvString = headers + csvString
+        
         let fileManager = FileManager.default
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let fileURL = documentsURL.appendingPathComponent(fileName + ".csv")
+        let fileURL = documentsURL.appendingPathComponent(writtenFileName + ".csv")
         
         do {
             try csvString.write(to: fileURL, atomically: true, encoding: .utf8)
