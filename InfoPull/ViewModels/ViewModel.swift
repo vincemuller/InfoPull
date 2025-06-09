@@ -7,19 +7,20 @@ import CoreML
 
 class ViewModel: ObservableObject {
     
-    @Published var showFileImporter: Bool = false
-    @Published var selectedFiles: String = ""
-    @Published var filesArray: [String] = []
-    @Published var extractedData: [FileData] = []
-    @Published var croppedImage: CGImage?
-    @Published var selectedModel: SelectedModel = .greenFieldsEngineering
     @Published var alertPresenting: Bool = false
+    @Published var croppedImage: CGImage?
     @Published var exportPromptPresenting: Bool = false
-    @Published var tablePresenting: Bool = false
+    @Published var extractedData: [FileData] = []
+    @Published var filesArray: [String] = []
     @Published var presentCropImage: Bool = false
-    
+    @Published var selectedFiles: String = ""
+    @Published var selectedModel: SelectedModel = .greenFieldsEngineering
+    @Published var showFileImporter: Bool = false
+    @Published var tablePresenting: Bool = false
     @Published var writtenFileName: String = ""
 
+
+    //Reset Functions
     
     func selectFilesReset() {
         selectedFiles = ""
@@ -34,7 +35,8 @@ class ViewModel: ObservableObject {
         croppedImage = nil
         presentCropImage = false
     }
-    //CoreML and Vision Functions
+    
+    //Download image functions
     
     func downloadLocalImage(from url: URL, completion: @escaping (CGImage?) -> Void) {
         URLSession.shared.dataTask(with: url) { data, _, _ in
@@ -61,6 +63,8 @@ class ViewModel: ObservableObject {
             completion(cgImage)
         }.resume()
     }
+    
+    //CoreML and Vision functions
     
     func detectTitleBlockSpecificExtract(from cgImage: CGImage, identifier: String) throws {
         guard let resizedImage = resizeCGImage(cgImage, to: CGSize(width: 932, height: 932)) else {
@@ -224,6 +228,8 @@ class ViewModel: ObservableObject {
 
         return image.cropping(to: rect)
     }
+    
+    //Write to CSV function
     
     func exportToCSV() {
         let headers = "Filepath,DrawingNumber,DrawingTitle,Project\n"

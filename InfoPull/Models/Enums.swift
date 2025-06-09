@@ -1,27 +1,15 @@
+//
+//  Enums.swift
+//  InfoPull
+//
+//  Created by Vince Muller on 6/8/25.
+//
+
 import Foundation
-import SwiftUI
 import CreateML
 import Vision
 import CoreML
 
-
-struct FileData: Identifiable {
-    var id = UUID()
-    var filename: String
-    var drawingNumber: String
-    var drawingTitle: String
-    var project: String
-    var revision: String
-}
-
-struct ErrorResponse: Codable {
-    var error: String
-    var title: String
-}
-
-struct Errors: Codable {
-    var errors: [ErrorResponse]
-}
 
 enum SelectedModel: Identifiable, CaseIterable {
     case greenFieldsEngineering, brownFieldsEngineering
