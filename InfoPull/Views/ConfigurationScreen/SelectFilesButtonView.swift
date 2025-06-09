@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SelectFilesButtonView: View {
     
@@ -29,6 +30,29 @@ struct SelectFilesButtonView: View {
             }
         }
         .buttonStyle(.plain)
+        .fileImporter(
+            isPresented: $viewModel.showFileImporter,
+            allowedContentTypes: [UTType.init(filenameExtension: "jpg")!, UTType.init(filenameExtension: "png")!],
+            allowsMultipleSelection: true
+        ) { result in
+            switch result {
+            case .success(let files):
+                files.forEach { file in
+                    // gain access to the directory
+                    let gotAccess = file.startAccessingSecurityScopedResource()
+                    if !gotAccess { return }
+                    // access the directory URL
+                    // (read templates in the directory, make a bookmark, etc.)
+                    viewModel.selectedFiles = file.path().replacingOccurrences(of: "%20", with: " ")
+                    let fileArray = viewModel.selectedFiles.components(separatedBy: "\n")
+                    viewModel.filesArray.append(contentsOf: fileArray)
+                    file.stopAccessingSecurityScopedResource()
+                }
+            case .failure(let error):
+                // handle error
+                print(error)
+            }
+        }
     }
 }
 

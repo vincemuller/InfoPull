@@ -16,6 +16,7 @@ class ViewModel: ObservableObject {
     @Published var alertPresenting: Bool = false
     @Published var exportPromptPresenting: Bool = false
     @Published var tablePresenting: Bool = false
+    @Published var presentCropImage: Bool = false
     
     @Published var writtenFileName: String = ""
 
@@ -24,6 +25,14 @@ class ViewModel: ObservableObject {
         selectedFiles = ""
         filesArray = []
         showFileImporter = true
+    }
+    
+    func clearTableReset() {
+        extractedData = []
+        filesArray = []
+        selectedFiles = ""
+        croppedImage = nil
+        presentCropImage = false
     }
     //CoreML and Vision Functions
     
