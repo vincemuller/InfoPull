@@ -19,6 +19,7 @@ struct TableCellView: View {
         HStack {
             TextEditor(text: $editorText)
                 .scrollContentBackground(.hidden)
+                .frame(maxWidth: editorText.count < 5 ? 50 : .infinity)
             Image(systemName: "text.below.photo")
                 .onTapGesture {
                     viewModel.downloadLocalImage(from: URL(fileURLWithPath: filename)) { image in

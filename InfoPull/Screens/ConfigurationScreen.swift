@@ -61,10 +61,15 @@ struct ConfigurationScreen: View {
         
         .alert("Export to CSV", isPresented: $viewModel.exportPromptPresenting) {
             TextField("Enter a name for your file", text: $viewModel.writtenFileName)
-            Button("EXPORT", action: {
-                viewModel.exportToCSV()
-                viewModel.exportPromptPresenting.toggle()
-            })
+            HStack {
+                Button("Export", action: {
+                    viewModel.exportToCSV()
+                    viewModel.exportPromptPresenting.toggle()
+                })
+                Button("Cancel") {
+                    viewModel.exportPromptPresenting.toggle()
+                }
+            }
         }
     }
     

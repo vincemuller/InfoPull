@@ -50,11 +50,12 @@ struct PullConfigurationView: View {
                     Text(attribute)
                         .font(.system(size: 14))
                         .foregroundStyle(Color.black)
+                        .offset(y: 2)
                 }
             }
             .padding(.leading, 10)
             .padding(.bottom)
-            .frame(width: 0.204 * width, height: 90, alignment: .leading)
+            .frame(width: 0.204 * width, height: 90, alignment: .topLeading)
             .background {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(Color.white)
