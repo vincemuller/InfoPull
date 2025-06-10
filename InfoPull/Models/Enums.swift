@@ -28,7 +28,7 @@ enum SelectedModel: Identifiable, CaseIterable {
             case .greenFieldsEngineering:
                 return try VNCoreMLModel(for: InfoPull_Model(configuration: .init()).model)
             case .brownFieldsEngineering:
-                return try VNCoreMLModel(for: MLModel())
+                return try VNCoreMLModel(for: InfoPullRevModel_(configuration: .init()).model)
             }
         }
     }
@@ -38,7 +38,7 @@ enum SelectedModel: Identifiable, CaseIterable {
         case .greenFieldsEngineering:
             return ["Drawing Number","Drawing Title","Project"]
         case .brownFieldsEngineering:
-            return ["Revision","Status","Drawn By"]
+            return ["Revision"]
         }
     }
 }

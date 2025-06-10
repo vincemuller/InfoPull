@@ -13,6 +13,7 @@ struct PullConfigurationView: View {
     
     let title: String = "Pull Configuration"
     let modelTitle: String = "Model:"
+    let attributeGroupTitle: String = "Attribute Group:"
     
     var width: CGFloat
     var height: CGFloat
@@ -40,7 +41,7 @@ struct PullConfigurationView: View {
         }
         .padding(.vertical, 20)
         HStack (alignment: .top) {
-            Text("Attribute Group:")
+            Text(attributeGroupTitle)
                 .frame(width: 0.1088 * width, alignment: .leading)
                 .font(.system(size: 20))
                 .foregroundStyle(Color.gray)
@@ -53,7 +54,7 @@ struct PullConfigurationView: View {
             }
             .padding(.leading, 10)
             .padding(.bottom)
-            .frame(width: 0.204 * width, alignment: .leading)
+            .frame(width: 0.204 * width, height: 90, alignment: .leading)
             .background {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(Color.white)

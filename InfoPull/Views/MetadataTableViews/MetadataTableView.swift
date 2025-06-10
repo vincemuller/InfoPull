@@ -17,25 +17,42 @@ struct MetadataTableView: View {
     var body: some View {
         !viewModel.tablePresenting ? nil :
         VStack (alignment: .center) {
-            Table($viewModel.extractedData) {
-                TableColumn("Filepath") { $row in
-                    HStack {
-                        TextEditor(text: $row.filename)
-                            .scrollContentBackground(.hidden)
+            switch viewModel.selectedModel {
+            case .greenFieldsEngineering:
+                Table($viewModel.extractedData) {
+                    TableColumn("Filepath") { $row in
+                        HStack {
+                            TextEditor(text: $row.filename)
+                                .scrollContentBackground(.hidden)
+                        }
+                    }
+                    TableColumn("Drawing Number") { $row in
+                        TableCellView(editorText: $row.drawingNumber, filename: row.filename, identifier: "drawingNumber")
+                    }
+                    TableColumn("Drawing Title") { $row in
+                        TableCellView(editorText: $row.drawingTitle, filename: row.filename, identifier: "drawingTitle")
+                    }
+                    TableColumn("Project") { $row in
+                        TableCellView(editorText: $row.project, filename: row.filename, identifier: "project")
                     }
                 }
-                TableColumn("Drawing Number") { $row in
-                    TableCellView(editorText: $row.drawingNumber, filename: row.filename, identifier: "drawingNumber")
+                .frame(width: width, height: 0.523 * height)
+                .background(Color.black)
+            case .brownFieldsEngineering:
+                Table($viewModel.extractedData) {
+                    TableColumn("Filepath") { $row in
+                        HStack {
+                            TextEditor(text: $row.filename)
+                                .scrollContentBackground(.hidden)
+                        }
+                    }
+                    TableColumn("Revision") { $row in
+                        TableCellView(editorText: $row.revision, filename: row.filename, identifier: "revision")
+                    }
                 }
-                TableColumn("Drawing Title") { $row in
-                    TableCellView(editorText: $row.drawingTitle, filename: row.filename, identifier: "drawingTitle")
-                }
-                TableColumn("Project") { $row in
-                    TableCellView(editorText: $row.project, filename: row.filename, identifier: "project")
-                }
+                .frame(width: width, height: 0.523 * height)
+                .background(Color.black)
             }
-            .frame(width: width, height: 0.523 * height)
-            .background(Color.black)
             
             OCRQAView(width: width, height: height)
             

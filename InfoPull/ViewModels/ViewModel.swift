@@ -80,7 +80,7 @@ class ViewModel: ObservableObject {
                 print(error?.localizedDescription ?? "Unknown error")
                 return
             }
-
+            
             for result in results {
                 
                 let label = result.labels.first?.identifier
@@ -94,11 +94,17 @@ class ViewModel: ObservableObject {
                         !text.lowercased().contains("blatt") &&
                         !text.lowercased().contains("roject:")
                     }
-
-                    if label == identifier {
+                    
+                    if label == identifier && identifier != "revision" {
                         DispatchQueue.main.async {
                             self.croppedImage = cropped
                         }
+                    } else if label == identifier && identifier == "revision" && u.contains(where: {$0.lowercased() == "revision"}) {
+                        DispatchQueue.main.async {
+                            self.croppedImage = cropped
+                        }
+                    } else {
+                        
                     }
 
                     dispatchGroup.leave()
@@ -149,7 +155,7 @@ class ViewModel: ObservableObject {
                     } else if label == "project" {
                         record.project = u.joined(separator: " ")
                     } else if label == "revision" && u.contains("Revision") {
-                        record.revision = u.joined(separator: " ")
+                        record.revision = u.filter({!$0.contains("Revision")}).joined(separator: " ")
                     } else {
                         
                     }
@@ -230,7 +236,6 @@ class ViewModel: ObservableObject {
     }
     
     //Write to CSV function
-    
     func exportToCSV() {
         let headers = "Filepath,DrawingNumber,DrawingTitle,Project\n"
         var csvString = extractedData.map { row in
