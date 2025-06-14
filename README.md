@@ -36,10 +36,13 @@ InfoPull uses a trained **CoreML + Vision** model to locate the title block area
 - Drawing Number  
 - Drawing Title  
 - Project Name
+- Revision
 
 Each result is paired with a cropped preview of the detected region, and users can manually review and edit extracted text inline.
 
 All extracted data is stored locally and can be exported as a `.csv` for integration with external systems.
+
+(The models in this repo are trained specifically for the dataset that lives in the "testingData" folder.  Specific models would need to be trained and added to the application for each unique drawing template/titleblock)
 
 ---
 
