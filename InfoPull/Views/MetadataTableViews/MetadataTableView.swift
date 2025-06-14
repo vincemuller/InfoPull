@@ -21,7 +21,7 @@ struct MetadataTableView: View {
                 .ignoresSafeArea()
             VStack (alignment: .center) {
                 switch viewModel.selectedModel {
-                case .greenFieldsEngineering:
+                case .general:
                     Table($viewModel.extractedData) {
                         TableColumn("Filepath") { $row in
                             HStack {
@@ -41,7 +41,7 @@ struct MetadataTableView: View {
                     }
                     .frame(width: width, height: 0.523 * height)
                     .background(Color.black)
-                case .brownFieldsEngineering:
+                case .revision:
                     Table($viewModel.extractedData) {
                         TableColumn("Filepath") { $row in
                             HStack {

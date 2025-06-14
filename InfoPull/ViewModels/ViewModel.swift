@@ -14,7 +14,7 @@ class ViewModel: ObservableObject {
     @Published var filesArray: [String] = []
     @Published var presentCropImage: Bool = false
     @Published var selectedFiles: String = ""
-    @Published var selectedModel: SelectedModel = .greenFieldsEngineering
+    @Published var selectedModel: SelectedModel = .general
     @Published var showFileImporter: Bool = false
     @Published var tablePresenting: Bool = false
     @Published var writtenFileName: String = ""
@@ -237,15 +237,26 @@ class ViewModel: ObservableObject {
     
     //Write to CSV function
     func exportToCSV() {
-        let headers = "Filepath,DrawingNumber,DrawingTitle,Project\n"
-        var csvString = extractedData.map { row in
-            row.filename + "," + row.drawingNumber + "," + row.drawingTitle + "," + row.project
-        }.joined(separator: "\n")
+        var headers: String = ""
+        var csvString: String = ""
         
+        switch selectedModel {
+        case .general:
+            headers = "Filepath,DrawingNumber,DrawingTitle,Project\n"
+            csvString = extractedData.map { row in
+                row.filename + "," + row.drawingNumber + "," + row.drawingTitle + "," + row.project
+            }.joined(separator: "\n")
+        case .revision:
+            headers = "Filepath,Revision\n"
+            csvString = extractedData.map { row in
+                row.filename + "," + row.revision
+            }.joined(separator: "\n")
+        }
+
         csvString = headers + csvString
         
         let fileManager = FileManager.default
-        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let documentsURL = fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
         let fileURL = documentsURL.appendingPathComponent(writtenFileName + ".csv")
         
         do {

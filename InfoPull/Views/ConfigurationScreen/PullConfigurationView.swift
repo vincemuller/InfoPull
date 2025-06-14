@@ -13,7 +13,7 @@ struct PullConfigurationView: View {
     
     let title: String = "Pull Configuration"
     let modelTitle: String = "Model:"
-    let attributeGroupTitle: String = "Attribute Group:"
+    let attributeGroupTitle: String = "Attributes:"
     
     var width: CGFloat
     var height: CGFloat
@@ -67,5 +67,5 @@ struct PullConfigurationView: View {
 }
 
 #Preview {
-    PullConfigurationView(selectedModel: .constant(.greenFieldsEngineering), width: 1470, height: 956)
+    PullConfigurationView(selectedModel: .constant(.general), width: 1470, height: 956)
 }

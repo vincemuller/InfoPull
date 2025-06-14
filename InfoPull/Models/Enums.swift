@@ -12,22 +12,22 @@ import CoreML
 
 
 enum SelectedModel: Identifiable, CaseIterable {
-    case greenFieldsEngineering, brownFieldsEngineering
+    case general, revision
     var id: Self { self }
     var label: String {
         switch self {
-        case .greenFieldsEngineering:
-            return "Green Fields Engineering Title Block"
-        case .brownFieldsEngineering:
-            return "Brown Fields Engineering Title Block"
+        case .general:
+            return "General Attributes Model"
+        case .revision:
+            return "Revision Attributes Model"
         }
     }
     var model: VNCoreMLModel {
         get throws {
             switch self {
-            case .greenFieldsEngineering:
+            case .general:
                 return try VNCoreMLModel(for: InfoPull_Model(configuration: .init()).model)
-            case .brownFieldsEngineering:
+            case .revision:
                 return try VNCoreMLModel(for: InfoPullRevModel_(configuration: .init()).model)
             }
         }
@@ -35,9 +35,9 @@ enum SelectedModel: Identifiable, CaseIterable {
     
     var attributes: [String] {
         switch self {
-        case .greenFieldsEngineering:
+        case .general:
             return ["Drawing Number","Drawing Title","Project"]
-        case .brownFieldsEngineering:
+        case .revision:
             return ["Revision"]
         }
     }
